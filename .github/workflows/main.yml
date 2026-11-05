@@ -1,0 +1,30 @@
+name: Build VST3 (Windows)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --target AutoMaster_VST3 --parallel
+
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          $v = Get-ChildItem -Path build -Recurse -Filter "AutoMaster.vst3" | Select-Object -First 1
+          Copy-Item -Recurse -Path $v.FullName -Destination dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AutoMaster-VST3-Windows
+          path: dist
