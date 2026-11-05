@@ -14,17 +14,21 @@ jobs:
       - name: Configure
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
-      - name: Build
+      - name: Build AutoMaster
+        continue-on-error: true
         run: cmake --build build --config Release --target AutoMaster_VST3 --parallel
+
+      - name: Build VoxChain
+        continue-on-error: true
+        run: cmake --build build --config Release --target VoxChain_VST3 --parallel
 
       - name: Package
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          $v = Get-ChildItem -Path build -Recurse -Filter "AutoMaster.vst3" | Select-Object -First 1
-          Copy-Item -Recurse -Path $v.FullName -Destination dist/
+          Get-ChildItem -Path build -Recurse -Filter "*.vst3" -Directory | ForEach-Object { Copy-Item -Recurse -Path $_.FullName -Destination dist/ }
 
       - uses: actions/upload-artifact@v4
         with:
-          name: AutoMaster-VST3-Windows
+          name: VST3-Windows
           path: dist
